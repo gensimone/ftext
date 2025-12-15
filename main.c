@@ -34,12 +34,12 @@ void help()
         }
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char* argv[])
 {
         int verbose = 0;
         int debug = 0;
-        char *input = NULL;
-        char *output = NULL;
+        char* input = NULL;
+        char* output = NULL;
         int lines = LINES;
         int columns = COLUMNS;
         int width = WIDHT;
@@ -99,13 +99,13 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        FILE *finput =  fopen(input,  "r");
+        FILE* finput =  fopen(input,  "r");
         if (!finput) {
                 perror("fopen");
                 return EXIT_FAILURE;
         }
 
-        FILE *foutput = fopen(output, "w");
+        FILE* foutput = fopen(output, "w");
         if (!foutput) {
                 perror("fopen");
                 return EXIT_FAILURE;
