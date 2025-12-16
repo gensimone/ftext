@@ -11,6 +11,12 @@
 #define WIDTH 21
 #define GAP 6
 
+/* function declarations */
+void emit_version(void);
+void emit_invalid_arg(char* opt);
+void emit_try_help(void);
+void usage(void);
+
 static struct option const longopts[] = 
 {
         {"version", no_argument, NULL, 'v'},
@@ -22,11 +28,16 @@ static struct option const longopts[] =
         {NULL, 0, NULL, 0},
 };
 
-
 void emit_version(void)
 {
-        printf("%s %s", PROGRAM_NAME, VERSION);
+        printf("%s\n", VERSION);
         exit(EXIT_SUCCESS);
+}
+
+void emit_invalid_arg(char* opt)
+{
+        fprintf(stderr, "Invalid argument for option %s\n", opt);
+        emit_try_help();
 }
 
 void emit_try_help(void) 
@@ -44,8 +55,8 @@ void usage(void)
         printf("  --lines   -l    number of lines (default %d)\n", LINES); 
         printf("  --gap     -l    number of spaces between columns (default %d)\n", GAP); 
         printf("  --width   -w    number of characters on a row of a column (default %d)\n", WIDTH);
-        printf("  --help    -h    display this help and exit");
-        printf("  --version -v    output version information and exit\n");
+        puts("  --help    -h    display this help and exit");
+        puts("  --version -v    output version information and exit");
 
         exit(EXIT_SUCCESS);
 }
@@ -76,20 +87,16 @@ int main(int argc, char* argv[])
                                 width = atoi(optarg);
                                 break;
                         case 'g':
+                                // FIXME: use strtol instead of atoi
                                 gap = atoi(optarg);
                                 break;
                         case '?':
                                 emit_try_help();
                 }
         
-        if (!lines)   
-                fputs("Argument of --lines must be greater than zero.\n", stderr);
-        if (!width)   
-                fputs("Argument of --width must be greater than zero.\n", stderr);
-        if (!columns) 
-                fputs("Argument of --columns must be greater than zero.\n", stderr);
-        if (!lines || !columns || !width) 
-                return EXIT_FAILURE;
+        if (lines <= 0)   emit_invalid_arg("--lines");
+        if (width <= 0)   emit_invalid_arg("--width");
+        if (columns <= 0) emit_invalid_arg("--columns");
 
-        return 0;
+        return EXIT_SUCCESS;
 }
