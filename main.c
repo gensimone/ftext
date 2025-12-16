@@ -85,19 +85,15 @@ int main(int argc, char* argv[])
         }
         
         /* Check format options. */
-
-        if (!lines)   fputs("lines cannot be zero.",   stderr);
-        if (!columns) fputs("columns cannot be zero.", stderr);
-        if (!width)   fputs("width cannot be zero.",   stderr);
-
+        if (!lines)   fputs("Argument of --lines must be greater than zero.\n", stderr);
+        if (!width)   fputs("Argument of --widht must be greater than zero.\n", stderr);
+        if (!columns) fputs("Argument of --cols must be greater than zero.\n", stderr);
         if (!lines || !columns || !width) return EXIT_FAILURE;
 
-        /* Check IO files. */
-
-        if (input == NULL || output == NULL) {
-                fprintf(stderr, "Missing --input or --output options.\n");
-                return EXIT_FAILURE;
-        }
+        /* Check IO */
+        if (!input) fputs("Argument of --input is required.\n", stderr);
+        if (!input) fputs("Argument of --output is required.\n", stderr);
+        if (!input || !output) return EXIT_FAILURE;
 
         FILE* finput =  fopen(input,  "r");
         if (!finput) {
