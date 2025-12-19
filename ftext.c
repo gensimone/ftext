@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
 }
 
-char** palloc(const int lines, const int line_length) 
+char** palloc(int lines, int line_length) 
 {
         char** page = (char**) malloc(lines * sizeof(char*));
         if (!page) 
@@ -135,12 +135,19 @@ int fpage(char** page, int cols, int col_lines, int col_width, int col_gap)
                 for (int y = 0; y < col_lines; y++) {
                         int x;
                         for (int rx = 0; rx < col_width; rx++) { 
+                                /* SAMPLE:               */
+                                /* Unicode       (UTF-8) */
+                                /* contenente  un  testo */
+                                /* in           italiano */
+                                /* strutturato        in */
                                 x = rx + col_alignment;      
                                 char c = getchar();
-                                if (c == '\n') c = ' ';
                                 if (c == EOF) return 1;
+                                // Substitute control characters.
+                                if (c < 32) c = ' ';
                                 page[y][x] = c;
                         }
+                        // In gaps, substitute '\0' with a whitespace.
                         for (int i = x + 1; i < x + col_gap + 1; i++)
                                 page[y][i] = ' ';
                 }
@@ -161,14 +168,8 @@ char** ftext(int cols, int col_lines, int col_width, int col_gap)
 
                 int finished = fpage(page, cols, col_lines, col_width, col_gap);
 
-                if (!debug) {
-                        for (int y = 0; y < col_lines; y++) {
-                                for (int x = 0; x < width_page_line; x++) {
-                                        int c = page[y][x];
-                                        printf("%c", c);
-                                }
-                                puts("");
-                        }
+                for (int y =0; y < col_lines; y++) {
+                        printf("%s\n", page[y]);
                 }
 
                 free(page);
