@@ -23,14 +23,19 @@
 !_TAG_KIND_DESCRIPTION!Make	I,makefile	/makefiles/
 !_TAG_KIND_DESCRIPTION!Make	m,macro	/macros/
 !_TAG_KIND_DESCRIPTION!Make	t,target	/targets/
+!_TAG_KIND_DESCRIPTION!Sh	a,alias	/aliases/
+!_TAG_KIND_DESCRIPTION!Sh	f,function	/functions/
+!_TAG_KIND_DESCRIPTION!Sh	h,heredoc	/label for here document/
+!_TAG_KIND_DESCRIPTION!Sh	s,script	/script files/
 !_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
 !_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
 !_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
 !_TAG_OUTPUT_VERSION	1.1	/current.age/
 !_TAG_PARSER_VERSION!C	1.1	/current.age/
 !_TAG_PARSER_VERSION!Make	1.1	/current.age/
+!_TAG_PARSER_VERSION!Sh	0.0	/current.age/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
-!_TAG_PROC_CWD	/home/simone/documents/uni/so/so2/ftext/	//
+!_TAG_PROC_CWD	/home/simone/codes/ftext/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
@@ -42,7 +47,27 @@
 !_TAG_ROLE_DESCRIPTION!C!struct	foreigndecl	/declared in foreign languages/
 !_TAG_ROLE_DESCRIPTION!Make!makefile	included	/included/
 !_TAG_ROLE_DESCRIPTION!Make!makefile	optional	/optionally included/
-help	main.c	/^void help() $/;"	f	typeref:typename:void
-longopts	main.c	/^struct option longopts[] = {$/;"	v	typeref:struct:option[]
-main	main.c	/^int main(int argc, char *argv[]) $/;"	f	typeref:typename:int
+!_TAG_ROLE_DESCRIPTION!Sh!heredoc	endmarker	/end marker/
+!_TAG_ROLE_DESCRIPTION!Sh!script	loaded	/loaded/
+COLS	ftext.c	/^#define COLS /;"	d	file:
+COL_GAP	ftext.c	/^#define COL_GAP /;"	d	file:
+COL_LINES	ftext.c	/^#define COL_LINES /;"	d	file:
+COL_WIDTH	ftext.c	/^#define COL_WIDTH /;"	d	file:
+NEW_PAGE	ftext.c	/^#define NEW_PAGE /;"	d	file:
+PROGRAM_NAME	ftext.c	/^#define PROGRAM_NAME /;"	d	file:
+VERSION	ftext.c	/^#define VERSION /;"	d	file:
+align_strings	ftext.c	/^char* align_strings(char* dst, int n)$/;"	f	typeref:typename:char *
+debug	ftext.c	/^int debug = 0;$/;"	v	typeref:typename:int
+die	ftext.c	/^void die(const char *fmt, ...)$/;"	f	typeref:typename:void
+emit_invalid_arg	ftext.c	/^void emit_invalid_arg(char* opt)$/;"	f	typeref:typename:void
+emit_try_help	ftext.c	/^void emit_try_help(void) $/;"	f	typeref:typename:void
+emit_version	ftext.c	/^void emit_version(void)$/;"	f	typeref:typename:void
+fpage	ftext.c	/^int fpage(char** page, int cols, int lines, int width, int gap) $/;"	f	typeref:typename:int
+ftext	ftext.c	/^char** ftext(int cols, int col_lines, int col_width, int col_gap) $/;"	f	typeref:typename:char **
+longopts	ftext.c	/^static struct option const longopts[] = {$/;"	v	typeref:struct:option const[]	file:
+main	ftext.c	/^int main(int argc, char* argv[])$/;"	f	typeref:typename:int
 main	tests/test.c	/^int main(int argc, char *argv[])$/;"	f	typeref:typename:int
+next_word	ftext.c	/^char* next_word(void)$/;"	f	typeref:typename:char *
+palloc	ftext.c	/^char** palloc(int n, int length)$/;"	f	typeref:typename:char **
+strspace	ftext.c	/^char* strspace(size_t n)$/;"	f	typeref:typename:char *
+usage	ftext.c	/^void usage(void) $/;"	f	typeref:typename:void
