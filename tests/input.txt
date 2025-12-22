@@ -1,4 +1,4 @@
-Sistemi Operativi II Modulo. Progetto
+Sistemi Operativi II Modulo. Progetto (Homework).
 
 L’obiettivo è implementare un programma C che trasformi un testo in italiano da una colonna a più colonne su più pagine (come ad es. per una pagina di quotidiano). Sono richieste due versioni del programma: una a singolo processo e una multi-processo con almeno tre processi concorrenti.
 
