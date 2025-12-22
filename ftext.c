@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <getopt.h>
+#include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
@@ -11,25 +12,28 @@
 #define VERSION "0.0.1"
 
 #define COLS 3
-#define COL_LINES 24
-#define COL_WIDTH 21
-#define COL_GAP 6
+#define LINES 24
+#define WIDTH 21
+#define GAP 6
 
 #define NEW_PAGE "\n %%%\n\n"
 
 int debug = 0;
 
 /* function declarations */
-char* align_strings(char* dst, int n);
 char* next_word(void);
 char* strspace(size_t n);
-char** ftext(int cols, int col_lines, int col_gap, int col_width);
+char** ftext(int cols, int lines, int gap, int width);
 char** palloc(int n, int length);
-int fpage(char** page, int cols, int col_lines, int col_width, int col_gap);
+int count_notascii(char* str);
+int fpage(char** page, int cols, int lines, int width, int gap);
 void die(const char *fmt, ...);
 void emit_invalid_arg(char* opt);
 void emit_try_help(void);
 void emit_version(void);
+void freepage(char** page, int n);
+void str_border_align(char** words, char* str, int word_counter, int width, int current_width);
+void str_left_align(char** words, char* str, int word_counter);
 void usage(void);
 
 static struct option const longopts[] = {
@@ -49,9 +53,9 @@ void usage(void)
         puts("Column the text provided in stdin and print it in stdout.");
         puts("The following options can be used to customize the formatting."); 
         printf("  --columns -c    number of columns (default %d)\n", COLS); 
-        printf("  --lines   -l    number of lines (default %d)\n", COL_LINES); 
-        printf("  --width   -w    number of characters on a row of a column (default %d)\n", COL_WIDTH);
-        printf("  --gap     -l    number of spaces between columns (default %d)\n", COL_GAP); 
+        printf("  --lines   -l    number of lines (default %d)\n", LINES); 
+        printf("  --width   -w    number of characters on a row of a column (default %d)\n", WIDTH);
+        printf("  --gap     -l    number of spaces between columns (default %d)\n", GAP); 
         puts("  --help    -h    display this help and exit");
         puts("  --debug   -d    enable debug mode"); 
         puts("  --version -v    output version information and exit");
@@ -95,149 +99,226 @@ void die(const char *fmt, ...)
 	exit(1);
 }
 
+char* salloc(size_t n)
+{
+        char* str;
+        if ((str = (char*) calloc(n, sizeof(char))) == NULL)
+                die("salloc: cannot calloc %zu bytes", n);
+        return str;
+}
+
 char** palloc(int n, int length)
 {
         char** page;
-        if (!(page = (char**) malloc(n * sizeof(char*))))
-                die("palloc: cannot malloc %zu bytes", n * sizeof(char*));
+        if (!(page = (char**) calloc(n, sizeof(char*))))
+                die("palloc: cannot calloc %zu bytes", n * sizeof(char*));
         for (int i = 0; i < n; i++) {
                 char* line;
-                if (!(line = (char*) malloc(length)))
-                        die("palloc: cannot malloc %zu bytes", length);
+                if (!(line = (char*) calloc(length, sizeof(char))))
+                        die("palloc: cannot calloc %zu bytes", length);
                 page[i] = line;
         }
         return page;
 }
 
-char* next_word(void)
+int isspace2(char c) 
 {
-        size_t size = 100;
-        char* word;
-        if (!(word = (char*) malloc(size)))
-                die("cannot malloc %zu bytes:", size);
-        int in_word = 0;
-        size_t size_c = 0;
-        int c;
-        for (int i = 0; (c = getchar()) != EOF; i++) {
-                if (c == ' ' || c == '\n' || c == '\t' && in_word) 
-                        break;
-                else {
-                        if (size_c >= size) {
-                                size += 100;
-                                if (!(word = realloc(word, size)))
-                                        die("cannot realloc %zu bytes:", size);
-                        }
-                        word[i] = c;
-                        in_word = 1;
-                        size_c++;
-                }
+        return c == '\f' || c == '\r' || c == '\t' || c == '\v' || c == ' ';
+}
+
+char* next_word(void) {
+    int c;
+    size_t len = 0;
+    size_t cap = 16;
+    char* buf = salloc(cap);
+
+    while ((c = getchar()) != EOF && isspace(c)) {
+        if (c == '\n') {
+                buf[0] = '\0';   // stringa vuota
+                return buf;
         }
-        return word;
+    }
+
+    if (c == EOF) {
+        free(buf);
+        return NULL;
+    }
+
+    while (c != EOF && !isspace(c)) {
+        if (len + 1 >= cap) {
+            cap *= 2;
+            char *tmp = realloc(buf, cap);
+            if (!tmp) {
+                free(buf);
+                return NULL;
+            }
+            buf = tmp;
+        }
+        buf[len++] = (char)c;
+        c = getchar();
+    }
+
+    buf[len] = '\0';
+    return buf;
 }
 
 char* strspace(size_t n)
 {
-        char* dst;
-        if (!(dst = (char*) malloc(n + 1)))
-                die("cannot malloc %zu bytes:", n + 1);
-        memset(dst, ' ', n);
-        dst[n] = '\0';
-        return dst;
+        char* str = salloc(n);
+        memset(str, ' ', n);
+        return str;
 }
 
-char** ftext(int cols, int col_lines, int col_width, int col_gap) 
+char** ftext(int cols, int lines, int width, int gap) 
 {
-        int width_page_line = col_width * cols + (cols - 1) * col_gap;
+        size_t page_width = (width * cols + (cols - 1) * gap) * 4;
         for (;;) {
-                char** page = palloc(col_lines, width_page_line);
-                int finished = fpage(page, cols, col_lines, col_width, col_gap);
-                for (int y =0; y < col_lines; y++)
+                char** page = palloc(lines, page_width);
+                int status = fpage(page, cols, lines, width, gap);
+                for (int y = 0; y < lines; y++)
                         printf("%s\n", page[y]);
-                free(page);
-                if (finished == EOF) break; 
-                else printf("%s", NEW_PAGE);
+                freepage(page, lines);
+                if (status == EOF) 
+                        break; 
+                printf("%s", NEW_PAGE);
         }
+}
+
+void freepage(char** page, int n) 
+{
+        for (int i = 0; i < n; i++)
+                free(page[i]);
+        free(page);
 }
 
 int fpage(char** page, int cols, int lines, int width, int gap) 
 {
+        int max_words = 100; 
+        char** words;
+        if ((words = (char**) calloc(max_words, sizeof(char*))) == NULL)
+                die("fpage: cannot calloc %zu bytes", max_words * sizeof(char*));
+        int current_width = 0;
+        int word_counter = 0;
         for (int c = 0; c < cols; c++) {
                 for (int l = 0; l < lines; l++) {
-                        word = next_word();
+                        while (1) {
+                                char* word = next_word();
+
+                                // EOF Reached.
+                                if (word == NULL) {
+                                        if (word_counter > 0) {
+                                                char* line = salloc(width);
+                                                // alignment
+                                                str_left_align(words, line, word_counter);
+                                                strcat(page[l], line);
+                                                free(line);
+                                        }
+                                        free(word);
+                                        freepage(words, max_words);
+                                        return EOF;
+                                }
+
+                                int word_length = strlen(word) - count_notascii(word);
+
+                                // New line found.
+                                if (word_length == 0) {
+                                        next_word();
+                                        char* line = salloc(width);
+                                        str_left_align(words, line, word_counter);
+                                        strcat(page[l], line);
+                                        strcat(page[l], strspace(gap + width - current_width - word_counter + 1));
+                                        if (l < lines - 1) {
+                                                strcat(page[l + 1], strspace(width + gap));
+                                        }
+                                        current_width = 0; 
+                                        word_counter = 0;
+                                        words[0] = NULL;
+                                        l++;
+                                        free(line);
+                                        break;
+                                }
+
+                                // Buffer has no space for 'word'.
+                                else if (word_length + current_width + word_counter > width) {
+                                        char* line = salloc(width);
+                                        str_border_align(words, line, word_counter, width, current_width);
+                                        strcat(page[l], line);
+                                        strcat(page[l], strspace(gap));
+                                        current_width = word_length; 
+                                        word_counter = 1;
+                                        words[0] = word;
+                                        free(line);
+                                        break;
+                                } 
+                                
+                                // Buffer has enough space for 'word'.
+                                else {
+                                        if (word_counter >= max_words) {
+                                                max_words += 100;
+                                                if ((words = (char**) realloc(words, max_words * sizeof(char*))) == NULL)
+                                                        die("fpage: cannot realloc %zu bytes", max_words * sizeof(char*));
+                                        }
+                                        words[word_counter] = word;
+                                        word_counter++;
+                                        current_width += word_length;
+                                }
+                        }
                 }
+        }
+        freepage(words, lines);
+}
+
+int count_notascii(char* str)
+{
+        int counter = 0;
+        int in_special_char = 0;
+        for (int i = 0; str[i] != '\0'; i++) {
+                if (str[i] < 0) {
+                        if (in_special_char == 0)
+                                in_special_char = 1;
+                        else
+                                counter++;
+                } else {
+                        in_special_char = 0;
+                }
+        }
+        return counter;
+}
+
+void str_left_align(char** words, char* str, int word_counter)
+{
+        strcat(str, words[0]);
+        for (int i = 1; i < word_counter; i++) {
+                strcat(str, " ");
+                strcat(str, words[i]);
         }
 }
 
-char* align_strings(char* dst, int n)
+void str_border_align(char** words, char* str, int word_counter, int width, int current_width)
 {
-        int t = 0;
-        int string_count = 0;
-
-        char** words_list;
-        if (!(words_list = (char**) malloc(sizeof(char*) * 10)))
-                die("cannot malloc %zu bytes:", sizeof(char*) * 10);
-
-        for (int i = 0; t < n; i++) {
-                char* word = next_word();
-                int length = strlen(word);
-                if (length == 0)
-                        break;
-                if (string_count > 0 && (t + length + string_count) > n) {
-                        strcpy(dst, word);
-                        break;
-                }
-                words_list[i] = word;
-                string_count++;
-                t += strlen(word);
+        strcpy(str, words[0]);
+        int internal_words;
+        if (word_counter == 1)
+                internal_words = 0;
+        else
+                internal_words = word_counter - 2;
+        int total_spaces = width - current_width;
+        for (int i = 1; i < word_counter; i++) {
+                int nspaces = ceil((double) total_spaces / (internal_words + 1));
+                total_spaces -= nspaces;
+                internal_words -= 1;
+                char* spaces = strspace(nspaces);
+                strcat(str, spaces);
+                strcat(str, words[i]);
         }
-
-        if (string_count == 1) {
-                if (t > n) {
-                        char* substring;
-                        if (!(substring = (char*) malloc(n + 1)))
-                                die("cannot malloc %zu bytes:", n);
-                        strncpy(substring, words_list[0], n);
-                        strcpy(dst, words_list[0] + n);
-                        return substring;
-                }
-                return words_list[0];
-        }
-
-        // do not consider last word.
-        // we already loaded that word in dst.
-        if (t > n) string_count -= 1;
-
-        char* str_output;
-        if (!(str_output = (char*) malloc(n + 1)))
-                die("cannot malloc %zu bytes:", n + 1);
-
-        strcpy(str_output, words_list[0]);
-
-        int n_internal_words = string_count - 2;
-        int n_tot_spaces = n - t;
-
-        for (int i = 1; i < string_count; i++) {
-                double res = (double) n_tot_spaces / (n_internal_words + 1);
-                int n_spaces = ceil(res);
-                n_tot_spaces -= n_spaces;
-                n_internal_words -= 1;
-                char* space = strspace(n_spaces);
-
-                strcat(str_output, space);
-                strcat(str_output, words_list[i]);
-                free(words_list[i]);
-        }
-        free(words_list);
-
-        return str_output;
 }
 
 int main(int argc, char* argv[])
 {
         int cols = COLS;
-        int col_lines = COL_LINES;
-        int col_width = COL_WIDTH;
-        int col_gap = COL_GAP;
+        int lines = LINES;
+        int width = WIDTH;
+        int gap = GAP;
 
         int opt;
         while ((opt = getopt_long(argc, argv, "c:l:w:g:vhd", longopts, NULL)) != -1)
@@ -254,25 +335,24 @@ int main(int argc, char* argv[])
                                 cols = atoi(optarg);
                                 break;
                         case 'l':
-                                col_lines = atoi(optarg);
+                                lines = atoi(optarg);
                                 break;
                         case 'w':
-                                col_width = atoi(optarg);
+                                width = atoi(optarg);
                                 break;
                         case 'g':
                                 // FIXME: use strtol instead of atoi
-                                col_gap = atoi(optarg);
+                                gap = atoi(optarg);
                                 break;
                         case '?':
                                 emit_try_help();
                 }
         
-        if (col_lines <= 0) emit_invalid_arg("--lines");
-        if (col_width <= 0) emit_invalid_arg("--width");
         if (cols <= 0) emit_invalid_arg("--columns");
+        if (lines <= 0) emit_invalid_arg("--lines");
+        if (width <= 0) emit_invalid_arg("--width");
 
-        ftext(cols, col_lines, col_width, col_gap);
+        ftext(cols, lines, width, gap);
 
         return EXIT_SUCCESS;
 }
-
