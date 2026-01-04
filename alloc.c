@@ -6,21 +6,23 @@
 */
 void* die_on_fail_calloc(size_t nmemb, size_t size)
 {
-    void* rptr = calloc(nmemb, size);
-    if (rptr == NULL)
-        die("cannot calloc %zu bytes", size);
-    return rptr;
+  void* rptr = calloc(nmemb, size);
+  if (rptr == NULL)
+    die("cannot calloc %zu bytes", size);
+  return rptr;
 }
 
 /* Same as realloc but die if the realloc fails
    to allocate the requested memory.
 */
 void* die_on_fail_realloc(void* ptr, size_t size)
+
 {
-    void* rptr = realloc(ptr, size);
-    if (rptr == NULL)
-        die("cannot realloc %zu bytes", size);
-    return rptr;
+
+  void* rptr = realloc(ptr, size);
+  if (rptr == NULL)
+    die("cannot realloc %zu bytes", size);
+  return rptr;
 }
 
 /*
@@ -30,10 +32,10 @@ void* die_on_fail_realloc(void* ptr, size_t size)
  */
 char** die_on_fail_palloc(int nl, int nc)
 {
-    char** pp = (char**) die_on_fail_calloc(nl, sizeof(char*));
-    for (int i = 0; i < nl; i++)
-        pp[i] = die_on_fail_calloc(nc, sizeof(char));
-    return pp;
+  char** pp = (char**) die_on_fail_calloc(nl, sizeof(char*));
+  for (int i = 0; i < nl; i++)
+    pp[i] = die_on_fail_calloc(nc, sizeof(char));
+  return pp;
 }
 
 /*
@@ -42,7 +44,7 @@ char** die_on_fail_palloc(int nl, int nc)
  */
 void free_palloc(char** pp, int n)
 {
-    for (int i = 0; i < n; i++)
-        free(pp[i]);
-    free(pp);
+  for (int i = 0; i < n; i++)
+    free(pp[i]);
+  free(pp);
 }
