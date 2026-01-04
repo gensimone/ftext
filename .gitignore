@@ -2,3 +2,4 @@
 *.out
 bin/
 .gdb_history
+tests/provided.txt
