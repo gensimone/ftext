@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -g
 DEPS = utils.h alloc.h strutil.h core.h
 OBJ = ftext.o util.o alloc.o strutil.o core.o
 TARGET = ftext
