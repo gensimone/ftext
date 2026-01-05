@@ -1,6 +1,6 @@
 Sistemi  Operativi II      Unicode       (UTF-8)      colonna  di  testo  e
-Modulo.      Progetto      contenente  un  testo      l’altra.             
-(Homework).                in           italiano                           
+Modulo.      Progetto      contenente  un  testo      l’altra.
+(Homework).                in           italiano
                            strutturato        in      Dati   in   uscita  e
 L’obiettivo         è      paragrafi separati da      requisiti: un file di
 implementare       un      una o più linee vuote      testo           ASCII
@@ -23,7 +23,7 @@ Dati  in  ingresso  e      di    caratteri   per      essere  allineate  ad
 requisiti: un file di      colonna); la distanza      entrambi   i  margini
 testo   in   codifica      in  caratteri tra una      della        colonna;
 
- %%% 
+ %%%
 
 l’ultima riga di ogni      commentare  le  linee      suddivisioni      del
 paragrafo    è   solo      di     codice     più      carico  di  lavoro in
@@ -41,23 +41,23 @@ Requisiti    generali      multi-processo    del      l’uso   di   librerie
 del   progetto:  ogni      programma       dovrà      esterne per l’analisi
 file    .c/.h   dovrà      essere  costituita da      delle  opzioni  della
 essere            ben      almeno  tre  processi      linea  di comando per
-commentato:  per ogni      concorrenti        ed      il vostro programma. 
-funzione   commentare      intercomunicanti: uno                           
+commentato:  per ogni      concorrenti        ed      il vostro programma.
+funzione   commentare      intercomunicanti: uno
 brevemente          i      per  leggere  il file      Suggerimenti:   usare
 parametri          di      di  ingresso, uno per      nomi  di  variabili e
-ingresso/uscita  e il      creare le colonne, ed      funzioni             
+ingresso/uscita  e il      creare le colonne, ed      funzioni
 suo     funzionamento      infine   uno  per  la      corrispondenti     al
-generale;  nel  corpo      scrittura del file di      loro                 
+generale;  nel  corpo      scrittura del file di      loro
 di    ogni   funzione      output.    (Ulteriori      significato/utilizzo;
 
- %%% 
+ %%%
 
 usare  stdin e stdout      Se  avete  tempo alla      programma     (3/30);
 per   rispettivamente      fine,  ottimizzate il      architettura      del
 il  testo in ingresso      codice per uso di CPU      programma  e commenti
 e      in     uscita;      e/o RAM, mantenendone      (2/30);  usabilità  e
 sviluppare  prima  la      la       correttezza;      istruzioni     utente
-versiosne                  potete  usare  wc per      (1/30).              
+versione                   potete  usare  wc per      (1/30).
 mono-processo     del      verificare   che   il
 programma, poi quella      numero  delle  parole
 multi-processo;   per      in   ingresso   e  in
@@ -70,8 +70,8 @@ libreria GNU standard      semplice    test   si
 del  C; concentratevi      riduce  ad  una  sola
 prima           sulla      linea  di comando con
 correttezza       dei      l’operatore   pipe  |
-programmi,       cioè      della shell).        
-assicuratevi  con più                           
+programmi,       cioè      della shell).
+assicuratevi  con più
 testi  di input che i      Il  punteggio massimo
 programmi   producano      è   6/30,  articolato
 un output incolonnato      come           segue:
