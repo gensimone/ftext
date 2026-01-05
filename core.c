@@ -68,13 +68,14 @@ void ftext(const int cols, const int lines, const int width, const int gap)
   for (;;) {
     char** page = die_on_fail_palloc(lines, page_width);
 
-    for (int c = 0; c < cols; c++) {    // Format individual page.
-      for (int l = 0; l < lines; l++) { // Format an entire column.
-        while (1) {                     // Format a line of a column.
+    for (int c = 0; c < cols; c++) {    // format individual page.
+      for (int l = 0; l < lines; l++) { // format an entire column.
+        while (1) {                     // format a line of a column.
           char* w = next_word();
 
           // EOF reached, flush any pending word and quit.
           if (w == NULL) {
+            free(w);
             if (wc > 0) {
               char* line = die_on_fail_calloc(width, sizeof(char));
               // Insert gap before actual text and in columns that are
@@ -85,11 +86,8 @@ void ftext(const int cols, const int lines, const int width, const int gap)
               // Concatenate the actual text.
               str_left_align(words, line, wc);
               strcat(page[l], line);
-
               free(line);
             }
-
-            free(w);
             eof = 1;
             goto print_page;
           }
@@ -101,15 +99,18 @@ void ftext(const int cols, const int lines, const int width, const int gap)
 
           // New line means go to the next paragraph.
           if (wl == 0) {
-            next_word(); // This will skip the empty line.
+            next_word(); // This skips the empty line.
             char* line = die_on_fail_calloc(width, sizeof(char));
-            str_left_align(words, line, wc);
+
             // Insert gap before actual text and in columns that are
             // not the first. This way we prevent trailing whitespaces.
             if (c > 0)
               strcat(page[l], strspace(gap));
 
+            // concatenate the actual text.
+            str_left_align(words, line, wc);
             strcat(page[l], line);
+            free(line);
 
             // Do not add whitespaces on the left side if we are
             // at the left most column.
@@ -118,17 +119,16 @@ void ftext(const int cols, const int lines, const int width, const int gap)
 
             // If we are at the bottom of the page or at
             // the left most column, do not insert a blank line.
-            if (l < lines - 1 && c < cols - 1)
-              strcat(page[l + 1], strspace(width));
+            l++;
+            if (l < lines - 1 && c < cols - 1) {
+              if (c > 0)
+                strcat(page[l], strspace(gap));
+              strcat(page[l], strspace(width));
+            }
 
+            // Reset and go to the next line.
             cw = 0;
             wc = 0;
-
-            free(line);
-
-            // Paragraphs are separated by a blank line so
-            // go two lines forward.
-            l++;
             break;
           }
 
@@ -144,6 +144,7 @@ void ftext(const int cols, const int lines, const int width, const int gap)
             // Concatenate the actual text.
             str_border_align(words, line, wc, width, cw);
             strcat(page[l], line);
+            free(line);
 
             // We need to fill width - len(word) with spaces when
             // only one word is going to be placed.
@@ -154,8 +155,6 @@ void ftext(const int cols, const int lines, const int width, const int gap)
             cw = wl;
             wc = 1;
             words[0] = w;
-
-            free(line);
             break; // go to next line.
           }
 
