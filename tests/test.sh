@@ -7,7 +7,7 @@ if [ $? -gt 0 ]; then
     exit 1
 fi
 
-if diff -b ./expected.txt ./provided.txt; then
+if diff ./expected.txt ./provided.txt; then
     echo "Test passed."
 else
     echo "Test failed."
