@@ -6,19 +6,28 @@
 */
 void* die_on_fail_calloc(size_t nmemb, size_t size)
 {
-  void* rptr = calloc(nmemb, size);
-  if (rptr == NULL)
+  void* ptr = calloc(nmemb, size);
+  if (ptr == NULL)
     die("cannot calloc %zu bytes", size);
-  return rptr;
+  return ptr;
+}
+
+/* Same as calloc but die if the calloc fails
+   to allocate the requested memory.
+*/
+void* die_on_fail_malloc(size_t size)
+{
+  void* ptr = malloc(size);
+  if (ptr == NULL)
+    die("cannot malloc %zu bytes", size);
+  return ptr;
 }
 
 /* Same as realloc but die if the realloc fails
    to allocate the requested memory.
 */
 void* die_on_fail_realloc(void* ptr, size_t size)
-
 {
-
   void* rptr = realloc(ptr, size);
   if (rptr == NULL)
     die("cannot realloc %zu bytes", size);
@@ -39,10 +48,11 @@ char** die_on_fail_palloc(int nl, int nc)
 }
 
 /*
-  Free the pointer pp, which must have been returned by a previous call
+  Free the pointer pp and all its n pointers associated.
+  The pointer pp must have been returned by a previous call
   to die_on_fail_palloc or a similar function.
  */
-void free_palloc(char** pp, int n)
+void free_page(char** pp, int n)
 {
   for (int i = 0; i < n; i++)
     free(pp[i]);
