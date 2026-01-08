@@ -1,7 +1,7 @@
 CC = cc
 CFLAGS = -Wall -Wextra -g
-DEPS = utils.h alloc.h strutil.h core.h
-OBJ = ftext.o util.o alloc.o strutil.o core.o
+DEPS = utils.h alloc.h strutil.h ccore.h queue.h
+OBJ = ftext.o util.o alloc.o strutil.o ccore.o queue.o
 TARGET = ftext
 
 all: $(TARGET)
