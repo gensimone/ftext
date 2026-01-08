@@ -1,4 +1,5 @@
 #include "queue.h"
+#include "alloc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,9 +18,7 @@ struct Queue {
 
 Queue* queue_create()
 {
-  Queue* q = malloc(sizeof(Queue));
-  if (q == NULL)
-    return NULL;
+  Queue* q = (Queue*) die_on_fail_malloc(sizeof(Queue));
 
   q->size = 0;
   q->tail = NULL;
@@ -47,9 +46,7 @@ void queue_free(Queue* q)
 
 int queue_push(Queue* q, const char* str)
 {
-  Node* n = (Node*) malloc(sizeof(Node));
-  if (n == NULL)
-    return -1;
+  Node* n = (Node*) die_on_fail_malloc(sizeof(Node));
 
   n->next = q->tail;
   n->prev = NULL;
