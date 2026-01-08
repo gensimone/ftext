@@ -1,3 +1,4 @@
-char* next_word(void);
-int fpage(char** page, int cols, int lines, int width, int gap);
-void ftext(int cols, int lines, int width, int gap);
+#include <stdio.h>
+
+void format_pages(FILE* input_stream, FILE* output_stream, const int cols, const int lines,
+                  const int width, const int gap);
