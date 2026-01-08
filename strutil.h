@@ -1,7 +1,7 @@
+#include "queue.h"
 #include <stddef.h>
 
-char* strspace(size_t n);
 int count_notasciic(char* str);
-void str_left_align(char** ws, char* str, int wc);
-void str_border_align(char** ws, char* str, int wc, int width,
-                      int current_width);
+char* strspace(size_t n);
+void sx_align(Queue* q, char* dst);
+void bx_align(Queue* q, char* dst, int spaces);
