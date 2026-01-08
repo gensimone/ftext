@@ -11,7 +11,8 @@ typedef struct Node {
 } Node;
 
 struct Queue {
-  int size;
+  unsigned int size;
+  unsigned int length;
   Node* tail;
   Node* head;
 };
@@ -21,18 +22,14 @@ Queue* queue_create()
   Queue* q = (Queue*) die_on_fail_malloc(sizeof(Queue));
 
   q->size = 0;
+  q->length = 0;
   q->tail = NULL;
   q->head = NULL;
 
   return q;
 }
 
-int queue_size(const Queue* q)
-{
-  return q->size;
-}
-
-void queue_free(Queue* q)
+void queue_destroy(Queue* q)
 {
   Node* n;
   while ((n = q->tail) != NULL) {
@@ -60,6 +57,7 @@ int queue_push(Queue* q, const char* str)
 
   q->tail = n;
   q->size++;
+  q->length += strlen(str);
 
   return 0;
 }
@@ -81,17 +79,29 @@ char* queue_pop(Queue* q)
   }
 
   free(old_head);
+
+  q->length -= strlen(out);
   q->size--;
 
   return out;
 }
 
-char* queue_head(Queue* q)
+unsigned int queue_length(const Queue* q)
+{
+  return q->length;
+}
+
+unsigned int queue_size(const Queue* q)
+{
+  return q->size;
+}
+
+char* queue_head(const Queue* q)
 {
   return q->head->value;
 }
 
-char* queue_tail(Queue* q)
+char* queue_tail(const Queue* q)
 {
   return q->tail->value;
 }
