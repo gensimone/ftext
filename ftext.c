@@ -38,8 +38,7 @@ void usage(void)
          "(default "
          "%d)\n",
          WIDTH);
-  printf("  --gap     -l    number of spaces between columns (default %d)\n",
-         GAP);
+  printf("  --gap     -l    number of spaces between columns (default %d)\n", GAP);
   puts("  --help    -h    display this help and exit");
   puts("  --version -v    output version information and exit");
   exit(EXIT_SUCCESS);
@@ -103,5 +102,5 @@ int main(int argc, char* argv[])
   if (width <= 0)
     emit_invalid_arg("--width");
 
-  ftext(cols, lines, width, gap);
+  format_pages(stdin, stdout, cols, lines, width, gap);
 }
