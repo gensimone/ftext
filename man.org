@@ -13,23 +13,22 @@ ftext - Format text like in a newspaper article.
 ftext [OPTION]...
 
 * DESCRIPTION
-ftext allows you to format text as in a newspaper article.
-The formatting of the text proceeds using the parameters
-expressed (see OPTIONS). Each column of the resulting text
-is formatted according to the following rules:
+ftext allows you to format text like a newspaper article.
+Text formatting is done using the specified parameters (see OPTIONS).
+Each column of the resulting text is formatted according to the following rules:
 
-1) The words in the line are aligned to the edges if they
-   are not part of the last line of the paragraph.
+1) Words in the line are aligned to the edges if
+they are not part of the last line of the paragraph.
 
-2) The words in the line are aligned to the left side of the
-   column if they are part of the last line of the paragraph.
+2) Words in the line are aligned to the left side of the
+column if they are part of the last line of the paragraph.
 
 For example:
 
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit,
     sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
 
- Procdues the following output:
+Procdues the following output:
 
     lorem ipsum dolor sit \\
     amet,     consectetur \\
@@ -39,7 +38,7 @@ For example:
     aliqua.
 
 * OPTIONS
-To get a list of default values use the -h option.
+For an up-to-date list of default option values, see ftext -h.
 - -c, --columns ::
   Number of columns.
 - -l, --lines ::
@@ -50,6 +49,8 @@ To get a list of default values use the -h option.
   Number of spaces between columns
 - -h, --help ::
   Show help and exit.
+- -m, --mthread ::
+  Execute the program using multiple threads.
 - -v, --version ::
   Output version information and exit.
 
