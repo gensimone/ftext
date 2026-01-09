@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+  It prints a formatted error message (optionally including errno)
+  to stderr and then terminates the program.
+  Stolen from util.c at https://git.suckless.org/dwm
+*/
 void die(const char* fmt, ...)
 {
   va_list ap;
