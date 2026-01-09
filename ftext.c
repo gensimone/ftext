@@ -107,8 +107,6 @@ int main(int argc, char* argv[])
   if (gap < 0)
     emit_invalid_arg("--gap");
 
-  printf("mthread: %d\n", mthread);
-
   if (mthread)
     mthread_exec(stdin, stdout, cols, lines, width, gap);
   else
