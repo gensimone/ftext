@@ -1,9 +1,14 @@
 #include "util.h"
 #include <stdlib.h>
 
-/* Same as calloc but die if the calloc fails
-   to allocate the requested memory.
-*/
+/*
+  Here are defined some memory "allocation" releated functions,
+  mainly wrappers to some stdlib allocation methods.
+  The main idea here is that if something like malloc fails we
+  do not want to continue the execution of the program.
+ */
+
+/* Wrap calloc. Die when calloc fails. */
 void* die_on_fail_calloc(size_t nmemb, size_t size)
 {
   void* ptr = calloc(nmemb, size);
@@ -12,9 +17,7 @@ void* die_on_fail_calloc(size_t nmemb, size_t size)
   return ptr;
 }
 
-/* Same as calloc but die if the calloc fails
-   to allocate the requested memory.
-*/
+/* Wrap malloc. Die when malloc fails. */
 void* die_on_fail_malloc(size_t size)
 {
   void* ptr = malloc(size);
@@ -23,9 +26,7 @@ void* die_on_fail_malloc(size_t size)
   return ptr;
 }
 
-/* Same as realloc but die if the realloc fails
-   to allocate the requested memory.
-*/
+/* Wrap realloc. Die when ralloc fails. */
 void* die_on_fail_realloc(void* ptr, size_t size)
 {
   void* rptr = realloc(ptr, size);
