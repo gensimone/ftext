@@ -1,5 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "core.h"
+#include "thread.h"
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +10,7 @@
 #define LINES 24
 #define WIDTH 21
 #define GAP 6
+#define MTHREAD 0
 
 void emit_invalid_arg(char* opt);
 void emit_try_help(void);
@@ -18,13 +19,10 @@ void usage(void);
 
 /* available options */
 static struct option const longopts[] = {
-    {"version", no_argument, NULL, 'v'},
-    {"help", no_argument, NULL, 'h'},
-    {"lines", required_argument, NULL, 'l'},
-    {"columns", required_argument, NULL, 'c'},
-    {"width", required_argument, NULL, 'w'},
-    {"gap", required_argument, NULL, 'g'},
-    {NULL, 0, NULL, 0},
+    {"version", no_argument, NULL, 'v'},       {"help", no_argument, NULL, 'h'},
+    {"mthread", no_argument, NULL, 'm'},       {"lines", required_argument, NULL, 'l'},
+    {"columns", required_argument, NULL, 'c'}, {"width", required_argument, NULL, 'w'},
+    {"gap", required_argument, NULL, 'g'},     {NULL, 0, NULL, 0},
 };
 
 void usage(void)
@@ -39,6 +37,7 @@ void usage(void)
          "%d)\n",
          WIDTH);
   printf("  --gap     -l    number of spaces between columns (default %d)\n", GAP);
+  puts("  --mthread -m    use multiple threads");
   puts("  --help    -h    display this help and exit");
   puts("  --version -v    output version information and exit");
   exit(EXIT_SUCCESS);
@@ -64,14 +63,14 @@ void emit_try_help(void)
 
 int main(int argc, char* argv[])
 {
-  int cols = COLS;
-  int lines = LINES;
-  int width = WIDTH;
-  int gap = GAP;
+  unsigned int cols = COLS;
+  unsigned int lines = LINES;
+  unsigned int width = WIDTH;
+  unsigned int gap = GAP;
+  unsigned short mthread = MTHREAD;
 
   int opt;
-  // FIXME: use strol instead of atoi
-  while ((opt = getopt_long(argc, argv, "c:l:w:g:vhd", longopts, NULL)) != -1)
+  while ((opt = getopt_long(argc, argv, "c:l:w:g:vhm", longopts, NULL)) != -1)
     switch (opt) {
     case 'v':
       emit_version();
@@ -80,27 +79,38 @@ int main(int argc, char* argv[])
       usage();
       break;
     case 'c':
-      cols = strtol(optarg, NULL, 10);
+      cols = strtol(optarg, NULL, 0);
       break;
     case 'l':
-      lines = atoi(optarg);
+      lines = strtol(optarg, NULL, 0);
       break;
     case 'w':
-      width = atoi(optarg);
+      width = strtol(optarg, NULL, 0);
       break;
     case 'g':
-      gap = atoi(optarg);
+      gap = strtol(optarg, NULL, 0);
+      break;
+    case 'm':
+      mthread = 1;
       break;
     case '?':
       emit_try_help();
       break;
     }
+
   if (cols <= 0)
     emit_invalid_arg("--columns");
   if (lines <= 0)
     emit_invalid_arg("--lines");
   if (width <= 0)
     emit_invalid_arg("--width");
+  if (gap < 0)
+    emit_invalid_arg("--gap");
 
-  format_pages(stdin, stdout, cols, lines, width, gap);
+  printf("mthread: %d\n", mthread);
+
+  if (mthread)
+    mthread_exec(stdin, stdout, cols, lines, width, gap);
+  else
+    sthread_exec(stdin, stdout, cols, lines, width, gap);
 }
