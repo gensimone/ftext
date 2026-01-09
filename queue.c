@@ -1,3 +1,4 @@
+/* Queue - Linked List. Implemented with some unusual methods and fields. */
 #include "queue.h"
 #include "alloc.h"
 #include "strutil.h"
@@ -5,103 +6,99 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Node implementation. */
 typedef struct Node {
   struct Node* next;
-  struct Node* prev;
-  char* value;
+  char* str;
 } Node;
 
+/* Queue implementation. */
 struct Queue {
-  unsigned int size;
-  unsigned int length;
+  unsigned int size;   // Tracks the number of elements (useful for calculating spaces
+  unsigned int length; // Track the total length of words.
+                       // The length of a character is always considered equal to 1, including
+                       // non-ASCII UTF-8 characters.
   Node* tail;
   Node* head;
 };
 
-Queue* queue_create()
+/* Create and initialize a Node. */
+static Node* node_create(char* str)
+{
+  Node* n = (Node*) die_on_fail_malloc(sizeof(Node));
+  n->next = NULL;
+  n->str = str;
+  return n;
+}
+
+/* Create and initialize a Queue. */
+Queue* queue_create(void)
 {
   Queue* q = (Queue*) die_on_fail_malloc(sizeof(Queue));
-
   q->size = 0;
   q->length = 0;
   q->tail = NULL;
   q->head = NULL;
-
   return q;
 }
 
+/* Destroy the queue. */
 void queue_destroy(Queue* q)
 {
-  Node* n;
-  while ((n = q->tail) != NULL) {
-    q->tail = n->next;
-    free(n->value);
-    free(n);
+  while (q->head != NULL) {
+    Node* n = q->head->next;
+    free(q->head->str);
+    free(q->head);
+    q->head = n;
   }
-
-  q->head = NULL;
+  q->tail = NULL;
   q->size = 0;
   q->length = 0;
 }
 
+/* Push from the bottom. */
 void queue_push(Queue* q, char* str)
 {
-  Node* n = (Node*) die_on_fail_malloc(sizeof(Node));
-
-  n->next = q->tail;
-  n->prev = NULL;
-  n->value = str;
-
-  if (q->size == 0)
-    q->head = n;
-
-  if (q->tail != NULL)
-    q->tail->prev = n;
-
-  q->tail = n;
+  Node* n = node_create(str);
+  if (queue_size(q) == 0)
+    q->tail = q->head = n;
+  else {
+    q->tail->next = n;
+    q->tail = n;
+  }
   q->size++;
   q->length += rstrlen(str);
 }
 
+/* Push from the top. */
 void queue_top(Queue* q, char* str)
 {
-  Node* n = (Node*) die_on_fail_malloc(sizeof(Node));
+  Node* n = node_create(str);
+  if (queue_size(q) == 0)
+    q->tail = q->head = n;
+  else {
+    n->next = q->head;
+    q->head = n;
+  }
 
-  n->next = NULL;
-  n->prev = q->head;
-  n->value = str;
-
-  if (q->size == 0)
-    q->tail = n;
-
-  if (q->head != NULL)
-    q->head->next = n;
-
-  q->head = n;
   q->size++;
   q->length += rstrlen(str);
 }
 
+/* Remove and return the tail if present, Otherwise NULL. */
 char* queue_pop(Queue* q)
 {
-  if (q->size == 0)
+  if (queue_size(q) == 0)
     return NULL;
 
-  char* out = q->head->value;
+  char* out = q->head->str;
+  Node* new_head = q->head->next;
 
-  Node* old_head = q->head;
-  if (q->size > 1) {
-    old_head->prev->next = NULL;
-    q->head = old_head->prev;
-  } else if (q->size == 1) {
-    q->tail = NULL;
-    q->head = NULL;
-  }
+  free(q->head);
 
-  free(old_head);
-
-  q->length -= rstrlen(out);
+  q->head = new_head;
   q->size--;
+  q->length -= rstrlen(out);
 
   return out;
 }
@@ -118,10 +115,10 @@ unsigned int queue_size(const Queue* q)
 
 char* queue_head(const Queue* q)
 {
-  return q->head ? q->head->value : NULL;
+  return q->head ? q->head->str : NULL;
 }
 
 char* queue_tail(const Queue* q)
 {
-  return q->tail ? q->tail->value : NULL;
+  return q->tail ? q->tail->str : NULL;
 }

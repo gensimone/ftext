@@ -3,7 +3,7 @@
 
 typedef struct Queue Queue;
 
-Queue* queue_create();
+Queue* queue_create(void);
 void queue_destroy(Queue* q);
 void queue_push(Queue* q, char* str);
 void queue_top(Queue* q, char* str);
