@@ -114,7 +114,7 @@ void format_page(char** page, Queue* stream_q, const unsigned int cols, const un
       /* We notified ourselves to skip this line because of the new paragraph. */
       /* See load_words. */
 
-      if (is_all_whitespace(queue_head(stream_q))) {
+      if (is_all_space(queue_head(stream_q))) {
         char* w = queue_pop(stream_q);
         free(w);
         continue;
