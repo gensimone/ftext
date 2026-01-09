@@ -1,5 +1,6 @@
 #include "queue.h"
 #include "alloc.h"
+#include "strutil.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,20 +35,22 @@ void queue_destroy(Queue* q)
   Node* n;
   while ((n = q->tail) != NULL) {
     q->tail = n->next;
+    free(n->value);
     free(n);
   }
 
   q->head = NULL;
   q->size = 0;
+  q->length = 0;
 }
 
-int queue_push(Queue* q, const char* str)
+void queue_push(Queue* q, char* str)
 {
   Node* n = (Node*) die_on_fail_malloc(sizeof(Node));
 
   n->next = q->tail;
   n->prev = NULL;
-  n->value = strdup(str);
+  n->value = str;
 
   if (q->size == 0)
     q->head = n;
@@ -57,9 +60,26 @@ int queue_push(Queue* q, const char* str)
 
   q->tail = n;
   q->size++;
-  q->length += strlen(str);
+  q->length += rstrlen(str);
+}
 
-  return 0;
+void queue_top(Queue* q, char* str)
+{
+  Node* n = (Node*) die_on_fail_malloc(sizeof(Node));
+
+  n->next = NULL;
+  n->prev = q->head;
+  n->value = str;
+
+  if (q->size == 0)
+    q->tail = n;
+
+  if (q->head != NULL)
+    q->head->next = n;
+
+  q->head = n;
+  q->size++;
+  q->length += rstrlen(str);
 }
 
 char* queue_pop(Queue* q)
@@ -80,7 +100,7 @@ char* queue_pop(Queue* q)
 
   free(old_head);
 
-  q->length -= strlen(out);
+  q->length -= rstrlen(out);
   q->size--;
 
   return out;
@@ -98,10 +118,10 @@ unsigned int queue_size(const Queue* q)
 
 char* queue_head(const Queue* q)
 {
-  return q->head->value;
+  return q->head ? q->head->value : NULL;
 }
 
 char* queue_tail(const Queue* q)
 {
-  return q->tail->value;
+  return q->tail ? q->tail->value : NULL;
 }
