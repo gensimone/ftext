@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "queue.h"
+#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +31,16 @@ char* strspace(size_t n)
   memset(str, ' ', n);
   str[n] = '\0';
   return str;
+}
+
+unsigned short is_all_whitespace(const char* str)
+{
+  while (*str) {
+    if (!isspace((unsigned char) *str))
+      return 0;
+    str++;
+  }
+  return 1;
 }
 
 void sx_align(Queue* q, char* dst)
