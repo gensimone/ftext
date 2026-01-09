@@ -17,7 +17,7 @@ void emit_try_help(void);
 void emit_version(void);
 void usage(void);
 
-/* available options */
+/* ftext available options. */
 static struct option const longopts[] = {
     {"version", no_argument, NULL, 'v'},       {"help", no_argument, NULL, 'h'},
     {"mthread", no_argument, NULL, 'm'},       {"lines", required_argument, NULL, 'l'},
@@ -63,11 +63,16 @@ void emit_try_help(void)
 
 int main(int argc, char* argv[])
 {
+  /* Default values for options. */
+
   int cols = COLS;
   int lines = LINES;
   int width = WIDTH;
   int gap = GAP;
   unsigned short mthread = MTHREAD;
+
+  /* Handle user options. */
+  /* TODO: improve error messages using strtol. */
 
   int opt;
   while ((opt = getopt_long(argc, argv, "c:l:w:g:vhm", longopts, NULL)) != -1)
@@ -98,6 +103,8 @@ int main(int argc, char* argv[])
       break;
     }
 
+  /* Handling incorrect values. */
+
   if (cols <= 0)
     emit_invalid_arg("--columns");
   if (lines <= 0)
@@ -106,6 +113,8 @@ int main(int argc, char* argv[])
     emit_invalid_arg("--width");
   if (gap < 0)
     emit_invalid_arg("--gap");
+
+  /* Start formatting. */
 
   if (mthread)
     mthread_exec(stdin, stdout, cols, lines, width, gap);
