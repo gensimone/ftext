@@ -78,7 +78,10 @@ void load_words(Queue* q, FILE* stream, const unsigned int width)
     } else {
       if (in_paragraph_divider == 0)
         queue_push(q, word);
-      in_paragraph_divider = 1;
+      else {
+        in_paragraph_divider = 1;
+        free(word);
+      }
     }
   }
 }
