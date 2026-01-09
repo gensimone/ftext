@@ -45,27 +45,10 @@ char* next_word(FILE* stream)
   return buf;
 }
 
-/* Load the word from stream into q. */
-void load_words(Queue* q, FILE* stream)
-{
-  char* word;
-  short in_paragraph_divider = 0;
-  while ((word = next_word(stream)) != NULL) {
-    if (strlen(word) > 0) {
-      in_paragraph_divider = 0;
-      queue_push(q, word);
-    } else {
-      if (in_paragraph_divider == 0)
-        queue_push(q, word);
-      in_paragraph_divider = 1;
-    }
-  }
-}
-
 /*
  Break a large word in multiple releated words.
 */
-void insert_word(char* src, const unsigned int width, Queue* q)
+static void insert_word(Queue* q, char* src, const unsigned int width)
 {
   unsigned int src_length = strlen(src);
   if (src_length <= width)
@@ -83,46 +66,44 @@ void insert_word(char* src, const unsigned int width, Queue* q)
   }
 }
 
-/*
-  Format a single page.
-  Return 1 if reach EOF otherwise 0.
- */
-static int format_page(char** page, Queue* stream_q, Queue* inter_q, const unsigned int cols,
-                       const unsigned int lines, const unsigned int width, const unsigned int gap)
+/* Load the word from stream into q. */
+void load_words(Queue* q, FILE* stream, const unsigned int width)
 {
-  unsigned short EOF_reached = 0;
+  char* word;
+  short in_paragraph_divider = 0;
+  while ((word = next_word(stream)) != NULL) {
+    if (strlen(word) > 0) {
+      in_paragraph_divider = 0;
+      insert_word(q, word, width);
+    } else {
+      if (in_paragraph_divider == 0)
+        queue_push(q, word);
+      in_paragraph_divider = 1;
+    }
+  }
+}
+
+static void format_page(char** page, Queue* stream_q, const unsigned int cols,
+                        const unsigned int lines, const unsigned int width, const unsigned int gap)
+{
   for (unsigned int c = 0; c < cols; c++) {
     for (unsigned int l = 0; l < lines; l++) {
-      if (EOF_reached) {
-        if (queue_size(inter_q) == 0) // We are done!
-          goto quit;
-      } else {
-        char* word;
-        // Read until the buffer is full.
-        while ((word = queue_pop(stream_q)) != NULL && queue_length(inter_q) <= width)
-          insert_word(word, width, inter_q);
-
-        // We have reached the end, EOF notification but do not exit yet,
-        // maybe we have words left to write.
-        if (word == NULL)
-          EOF_reached = 1;
-        else
-          insert_word(word, width, inter_q); // This was taken, but not inserted.
-      }
-
       // Consider only the first words that fit within the width.
       Queue* tmp_q = queue_create();
       unsigned short new_paragraph = 0;
       do {
-        char* word = queue_pop(inter_q);
+        char* word = queue_pop(stream_q);
         if (strlen(word) == 0) {
           new_paragraph = 1;
           free(word);
           break;
         }
         queue_push(tmp_q, word);
-      } while (queue_size(inter_q) > 0 &&
-               queue_length(tmp_q) + queue_size(tmp_q) + strlen(queue_head(inter_q)) <= width);
+      } while (queue_size(stream_q) > 0 &&
+               queue_length(tmp_q) + (strlen(queue_head(stream_q))
+                                          ? queue_size(tmp_q) + strlen(queue_head(stream_q))
+                                          : queue_size(tmp_q) - 1) <=
+                   width);
 
       // Gap
       if (c > 0) {
@@ -132,28 +113,33 @@ static int format_page(char** page, Queue* stream_q, Queue* inter_q, const unsig
       }
 
       // Calculate spaces here before consuming tmp_q.
-      // These are extra spaces added to the right of the line when, for example, there is only one
-      // word (the last line of a paragraph) or non-ASCII characters are present.
-      char* extra_spaces = strspace(width - (queue_size(tmp_q) == 1 ? queue_length(tmp_q) : width));
+      // These are extra spaces added to the right of the line when,
+      // for example, there is only one word.
+      unsigned int nspaces = queue_size(tmp_q) == 1 ? width - queue_length(tmp_q) : 0;
 
       char* line = die_on_fail_calloc((width * 4) + 1, sizeof(char));
       if (new_paragraph) {
         sx_align(tmp_q, line);
-        queue_top(inter_q, strspace(width));
+        queue_top(stream_q, strspace(width));
       } else
         bx_align(tmp_q, line, width - queue_length(tmp_q));
       assert(queue_size(tmp_q) == 0);
 
       strcat(page[l], line);
-      strcat(page[l], extra_spaces);
 
-      free(extra_spaces);
+      if (nspaces > 0) {
+        char* extra_spaces = strspace(nspaces);
+        strcat(page[l], extra_spaces);
+        free(extra_spaces);
+      }
+
       free(line);
       free(tmp_q);
+
+      if (queue_size(stream_q) == 0)
+        return;
     }
   }
-quit:
-  return EOF_reached;
 }
 
 /*
@@ -164,26 +150,19 @@ void format_pages(FILE* input_stream, FILE* output_stream, const int cols, const
                   const int width, const int gap)
 {
   Queue* stream_q = queue_create();
-  load_words(stream_q, input_stream);
+  load_words(stream_q, input_stream, width);
 
   const size_t page_width = (width * cols + (cols - 1) * gap) * 4;
-
-  Queue* inter_q = queue_create();
   char** page;
-  int EOF_reached;
   do {
     page = die_on_fail_palloc(lines, page_width);
-    EOF_reached = format_page(page, stream_q, inter_q, cols, lines, width, gap);
+    format_page(page, stream_q, cols, lines, width, gap);
     for (int i = 0; i < lines; i++)
       fprintf(output_stream, "%s\n", page[i]);
-    if (!EOF_reached)
+    if (queue_size(stream_q) > 0)
       fprintf(output_stream, "%s", NEW_PAGE);
     free_page(page, lines);
-  } while (!EOF_reached);
-
-  assert(queue_size(inter_q) == 0);
+  } while (queue_size(stream_q) > 0);
   assert(queue_size(stream_q) == 0);
-
-  free(inter_q);
   free(stream_q);
 }

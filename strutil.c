@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-static unsigned int count_notasciic(const char* str)
+unsigned int rstrlen(const char* str)
 {
   if (strlen(str) == 0)
     return 0;
+
   int counter = 0;
   int in_nonascii_char = 0;
   for (int i = 0; str[i] != '\0'; i++) {
@@ -19,12 +20,8 @@ static unsigned int count_notasciic(const char* str)
     } else
       in_nonascii_char = 0;
   }
-  return counter;
-}
 
-unsigned int rstrlen(const char* str)
-{
-  return strlen(str) - count_notasciic(str);
+  return strlen(str) - counter;
 }
 
 char* strspace(size_t n)
@@ -41,7 +38,8 @@ void sx_align(Queue* q, char* dst)
   while ((word = queue_pop(q)) != NULL) {
     strcat(dst, word);
     free(word);
-    strcat(dst, " ");
+    if (queue_size(q) > 0)
+      strcat(dst, " ");
   }
 }
 
