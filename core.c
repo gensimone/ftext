@@ -16,7 +16,12 @@ char* next_word(FILE* stream)
 {
   int c;
   size_t len = 0;
-  size_t cap = 6; // ~ average english word length.
+
+  /* OK, using such a small value seems silly because it could cause several reallocations, */
+  /* but in reality, in English, words have an average length of about 5-6. */
+  /* Doing so can save a lot of memory, depending on the case and the language used. */
+
+  size_t cap = 6;
   char* buf = die_on_fail_calloc(cap, sizeof(char));
 
   while ((c = fgetc(stream)) != EOF && isspace(c)) {
@@ -26,13 +31,18 @@ char* next_word(FILE* stream)
     }
   }
 
+  /* EOF reached, nothing to do.. */
+
   if (c == EOF) {
     free(buf);
     return NULL;
   }
 
+  /* Start reading the characters that matters. */
+
   while (c != EOF && !isspace(c)) {
-    if (len + 1 >= cap) // capacity exceeded.
+    /* Capacity exceeded. */
+    if (len + 1 >= cap)
       buf = die_on_fail_realloc(buf, cap *= 2);
 
     buf[len++] = (char) c;
@@ -44,9 +54,10 @@ char* next_word(FILE* stream)
 }
 
 /*
- Break a large word in multiple releated words.
+  This is probably the worst function, but I don't know how to rewrite it right now.
+  The idea is to split the input 'src' when it's longer than 'width'.
 */
-static void insert_word(Queue* q, char* src, const unsigned int width)
+static void split_word(Queue* q, char* src, const unsigned int width)
 {
   unsigned int src_length = strlen(src);
   if (src_length <= width)
@@ -64,17 +75,12 @@ static void insert_word(Queue* q, char* src, const unsigned int width)
   }
 }
 
-/* Print the formatted page to the specified stream. */
-void print_page(char** page, FILE* stream, const unsigned int lines)
-{
-  for (unsigned int l = 0; l < lines; l++) {
-    if (strlen(page[l]) == 0)
-      break;
-    fprintf(stream, "%s\n", page[l]);
-  }
-}
-
-/* Load the word from stream into q. */
+/*
+  Load the word from stream into q.
+  Do not consider multiple consecutive blank lines.
+  A single blank line is considered and loaded as ''.
+  (We later use '' as "new paragraph command".)
+*/
 void load_words(Queue* q, FILE* stream, const unsigned int width)
 {
   char* word;
@@ -82,7 +88,7 @@ void load_words(Queue* q, FILE* stream, const unsigned int width)
   while ((word = next_word(stream)) != NULL) { // NULL => EOF.
     if (strlen(word) > 0) {
       in_paragraph_divider = 0;
-      insert_word(q, word, width);
+      split_word(q, word, width);
     } else {
       if (in_paragraph_divider == 0) {
         queue_push(q, word);
@@ -93,26 +99,30 @@ void load_words(Queue* q, FILE* stream, const unsigned int width)
   }
 }
 
-/*
-  Format a single Page with the provided configuration
-  and using the words in stream_q.
-*/
+/* Format a single Page with the provided configuration and using the words in stream_q. */
 void format_page(char** page, Queue* stream_q, const unsigned int cols, const unsigned int lines,
                  const unsigned int width, const unsigned int gap)
 {
   for (unsigned int c = 0; c < cols; c++) {    // Format columns
     for (unsigned int l = 0; l < lines; l++) { // Format lines
+
+      /* Stream is empty, nothing to do.. */
+
       if (queue_size(stream_q) == 0)
-        // We are done.
         return;
 
-      if (is_all_whitespace(queue_head(stream_q))) { // This is the new paragraph line placeholder.
-        char* w = queue_pop(stream_q);               // Remove it and go to the next line.
+      /* We notified ourselves to skip this line because of the new paragraph. */
+      /* See load_words. */
+
+      if (is_all_whitespace(queue_head(stream_q))) {
+        char* w = queue_pop(stream_q);
         free(w);
         continue;
       }
 
-      // Consider only the first words that fit within the width.
+      /* Consider only the first words that fit within the width. */
+      /* Hitting '' means go to the next paragraph. */
+
       Queue* line_q = queue_create();
       unsigned short new_paragraph = 0;
       while (queue_size(stream_q) > 0 &&
@@ -129,6 +139,9 @@ void format_page(char** page, Queue* stream_q, const unsigned int cols, const un
         queue_push(line_q, word);
       }
 
+      /* Write spaces in order to align the following line of text. */
+      /* This version does not suffers from trailing whitespaces. */
+
       int nspaces = (width * c + c * gap) - rstrlen(page[l]);
       if (nspaces > 0) {
         char* spaces = strspace(nspaces);
@@ -136,19 +149,32 @@ void format_page(char** page, Queue* stream_q, const unsigned int cols, const un
         free(spaces);
       }
 
+      /* Write the actual line of text. */
+      /* Load a line of length 'width' to notify new paragraph. */
+
       char* line = die_on_fail_calloc((width * 4) + 1, sizeof(char));
       if (new_paragraph) {
         sx_align(line_q, line);
         queue_top(stream_q, strspace(width)); // Placeholder for new paragraph line.
       } else
         bx_align(line_q, line, width - queue_length(line_q));
-
-      assert(queue_size(line_q) == 0);
-
       strcat(page[l], line);
 
+      /* Free unused memory and assert queue length. */
+
+      assert(queue_size(line_q) == 0);
       free(line);
       free(line_q);
     }
+  }
+}
+
+/* Print the formatted page to the specified stream. */
+void print_page(char** page, FILE* stream, const unsigned int lines)
+{
+  for (unsigned int l = 0; l < lines; l++) {
+    if (strlen(page[l]) == 0)
+      break;
+    fprintf(stream, "%s\n", page[l]);
   }
 }
