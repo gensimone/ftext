@@ -7,18 +7,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NEW_PAGE "\n %%%\n\n"
-
 /*
   Read from the stream and return the first word.
-  If '\n' is found, return a pointer to '\0'.
-  If EOF is found, return NULL.
+  If '\n' is found, a pointer to '\0' is returned.
+  If EOF is found, NULL is returned.
  */
 char* next_word(FILE* stream)
 {
   int c;
   size_t len = 0;
-  size_t cap = 100;
+  size_t cap = 6; // ~ average english word length.
   char* buf = die_on_fail_calloc(cap, sizeof(char));
 
   while ((c = fgetc(stream)) != EOF && isspace(c)) {
@@ -66,36 +64,50 @@ static void insert_word(Queue* q, char* src, const unsigned int width)
   }
 }
 
+/* Print the formatted page to the specified stream. */
+void print_page(char** page, FILE* stream, const unsigned int lines)
+{
+  for (unsigned int l = 0; l < lines; l++) {
+    if (strlen(page[l]) == 0)
+      break;
+    fprintf(stream, "%s\n", page[l]);
+  }
+}
+
 /* Load the word from stream into q. */
 void load_words(Queue* q, FILE* stream, const unsigned int width)
 {
   char* word;
-  short in_paragraph_divider = 0;
-  while ((word = next_word(stream)) != NULL) {
+  int in_paragraph_divider = 0;
+  while ((word = next_word(stream)) != NULL) { // NULL => EOF.
     if (strlen(word) > 0) {
       in_paragraph_divider = 0;
       insert_word(q, word, width);
     } else {
-      if (in_paragraph_divider == 0)
+      if (in_paragraph_divider == 0) {
         queue_push(q, word);
-      else {
         in_paragraph_divider = 1;
+      } else
         free(word);
-      }
     }
   }
 }
 
-static void format_page(char** page, Queue* stream_q, const unsigned int cols,
-                        const unsigned int lines, const unsigned int width, const unsigned int gap)
+/*
+  Format a single Page with the provided configuration
+  and using the words in stream_q.
+*/
+void format_page(char** page, Queue* stream_q, const unsigned int cols, const unsigned int lines,
+                 const unsigned int width, const unsigned int gap)
 {
-  for (unsigned int c = 0; c < cols; c++) {
-    for (unsigned int l = 0; l < lines; l++) {
+  for (unsigned int c = 0; c < cols; c++) {    // Format columns
+    for (unsigned int l = 0; l < lines; l++) { // Format lines
       if (queue_size(stream_q) == 0)
+        // We are done.
         return;
 
-      if (is_all_whitespace(queue_head(stream_q))) { // Empty line here.
-        char* w = queue_pop(stream_q);
+      if (is_all_whitespace(queue_head(stream_q))) { // This is the new paragraph line placeholder.
+        char* w = queue_pop(stream_q);               // Remove it and go to the next line.
         free(w);
         continue;
       }
@@ -139,29 +151,4 @@ static void format_page(char** page, Queue* stream_q, const unsigned int cols,
       free(line_q);
     }
   }
-}
-
-/*
-  Format the text from input_stream to output_stream
-  based on the specified parameters.
-*/
-void format_pages(FILE* input_stream, FILE* output_stream, const int cols, const int lines,
-                  const int width, const int gap)
-{
-  Queue* stream_q = queue_create();
-  load_words(stream_q, input_stream, width);
-
-  const size_t page_width = (width * cols + (cols - 1) * gap) * 4;
-  char** page;
-  do {
-    page = die_on_fail_palloc(lines, page_width);
-    format_page(page, stream_q, cols, lines, width, gap);
-    for (int i = 0; i < lines; i++)
-      fprintf(output_stream, "%s\n", page[i]);
-    if (queue_size(stream_q) > 0)
-      fprintf(output_stream, "%s", NEW_PAGE);
-    free_page(page, lines);
-  } while (queue_size(stream_q) > 0);
-  assert(queue_size(stream_q) == 0);
-  free(stream_q);
 }
