@@ -88,56 +88,52 @@ static void format_page(char** page, Queue* stream_q, const unsigned int cols,
 {
   for (unsigned int c = 0; c < cols; c++) {
     for (unsigned int l = 0; l < lines; l++) {
+      if (queue_size(stream_q) == 0)
+        return;
+
+      if (is_all_whitespace(queue_head(stream_q))) { // Empty line here.
+        char* w = queue_pop(stream_q);
+        free(w);
+        continue;
+      }
+
       // Consider only the first words that fit within the width.
-      Queue* tmp_q = queue_create();
+      Queue* line_q = queue_create();
       unsigned short new_paragraph = 0;
-      do {
+      while (queue_size(stream_q) > 0 &&
+             queue_length(line_q) + rstrlen(queue_head(stream_q)) +
+                     (strlen(queue_head(stream_q)) > 0 ? queue_size(line_q)
+                                                       : queue_size(line_q) - 1) <=
+                 width) {
         char* word = queue_pop(stream_q);
         if (strlen(word) == 0) {
           new_paragraph = 1;
           free(word);
           break;
         }
-        queue_push(tmp_q, word);
-      } while (queue_size(stream_q) > 0 &&
-               queue_length(tmp_q) + (strlen(queue_head(stream_q))
-                                          ? queue_size(tmp_q) + strlen(queue_head(stream_q))
-                                          : queue_size(tmp_q) - 1) <=
-                   width);
+        queue_push(line_q, word);
+      }
 
-      // Gap
-      if (c > 0) {
-        char* spaces = strspace(gap);
+      int nspaces = (width * c + c * gap) - rstrlen(page[l]);
+      if (nspaces > 0) {
+        char* spaces = strspace(nspaces);
         strcat(page[l], spaces);
         free(spaces);
       }
 
-      // Calculate spaces here before consuming tmp_q.
-      // These are extra spaces added to the right of the line when,
-      // for example, there is only one word.
-      unsigned int nspaces = queue_size(tmp_q) == 1 ? width - queue_length(tmp_q) : 0;
-
       char* line = die_on_fail_calloc((width * 4) + 1, sizeof(char));
       if (new_paragraph) {
-        sx_align(tmp_q, line);
-        queue_top(stream_q, strspace(width));
+        sx_align(line_q, line);
+        queue_top(stream_q, strspace(width)); // Placeholder for new paragraph line.
       } else
-        bx_align(tmp_q, line, width - queue_length(tmp_q));
-      assert(queue_size(tmp_q) == 0);
+        bx_align(line_q, line, width - queue_length(line_q));
+
+      assert(queue_size(line_q) == 0);
 
       strcat(page[l], line);
 
-      if (nspaces > 0) {
-        char* extra_spaces = strspace(nspaces);
-        strcat(page[l], extra_spaces);
-        free(extra_spaces);
-      }
-
       free(line);
-      free(tmp_q);
-
-      if (queue_size(stream_q) == 0)
-        return;
+      free(line_q);
     }
   }
 }
