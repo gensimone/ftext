@@ -1,0 +1,6 @@
+ftext is a program for formatting text in multiple columns.
+It was made for my university's Operating Systems 2 project.
+
+* To compile the program use make.
+* For copyright information, see LICENSE.
+* For information about available options, see 'man ftext.1'.
