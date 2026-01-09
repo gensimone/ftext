@@ -63,10 +63,10 @@ void emit_try_help(void)
 
 int main(int argc, char* argv[])
 {
-  unsigned int cols = COLS;
-  unsigned int lines = LINES;
-  unsigned int width = WIDTH;
-  unsigned int gap = GAP;
+  int cols = COLS;
+  int lines = LINES;
+  int width = WIDTH;
+  int gap = GAP;
   unsigned short mthread = MTHREAD;
 
   int opt;

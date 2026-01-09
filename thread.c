@@ -82,18 +82,21 @@ void mthread_exec(FILE* input_stream, FILE* output_stream, const unsigned cols,
     /* Free the page from the memory. */
 
     pthread_join(pp_tid, NULL);
+
+    /* Do not print \n%%%... on last page. */
     if (queue_size(stream_q) > 0)
       fprintf(output_stream, "%s", NEW_PAGE);
 
     free_page(page, lines);
-
   } while (queue_size(stream_q) > 0);
 
-  assert(queue_size(stream_q) == 0);
+  assert(queue_size(stream_q) == 0); // Just in case (debug).
   free(stream_q);
 }
 
-/* Single thread execution. */
+/*
+  Single thread execution. Same as the mthread_exec but simpler.
+ */
 void sthread_exec(FILE* input_stream, FILE* output_stream, const unsigned cols,
                   const unsigned lines, const unsigned width, const unsigned gap)
 {
