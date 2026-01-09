@@ -7,18 +7,15 @@ ftext - Format text like in a newspaper article.
 ftext [OPTION]...
 .SH "DESCRIPTION"
 .PP
-ftext allows you to format text as in a newspaper article.
-The formatting of the text proceeds using the parameters
-expressed (see OPTIONS). Each column of the resulting text
-is formatted according to the following rules:
+ftext allows you to format text like a newspaper article.
+Text formatting is done using the specified parameters (see OPTIONS).
+Each column of the resulting text is formatted according to the following rules:
 
 .IP 1)  4
-The words in the line are aligned to the edges if they
-are not part of the last line of the paragraph.
+Words in the line are aligned to the edges if they are not part of the last line of the paragraph.
 
 .IP 2)  4
-The words in the line are aligned to the left side of the
-column if they are part of the last line of the paragraph.
+Words in the line are aligned to the left side of the column if they are part of the last line of the paragraph.
 
 .PP
 For example:
@@ -44,7 +41,7 @@ et    dolore    magna
 aliqua.
 .SH "OPTIONS"
 .PP
-To get a list of default values use the -h option.
+For an up-to-date list of default option values, see ftext -h.
 .TP
 \fB-c, --columns\fP
 Number of columns.
@@ -60,6 +57,9 @@ Number of spaces between columns
 .TP
 \fB-h, --help\fP
 Show help and exit.
+.TP
+\fB-m, --mthread\fP
+Execute the program using multiple threads.
 .TP
 \fB-v, --version\fP
 Output version information and exit.
