@@ -14,11 +14,11 @@ For example:
 
 Produces the following output:
 
-    lorem ipsum dolor sit \\
-    amet,     consectetur \\
-    adipiscing  elit, sed \\
-    incididunt  ut labore \\
-    et    dolore    magna \\
+    lorem ipsum dolor sit
+    amet,     consectetur
+    adipiscing  elit, sed
+    incididunt  ut labore
+    et    dolore    magna
     aliqua.
 
 
