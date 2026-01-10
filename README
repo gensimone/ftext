@@ -21,10 +21,22 @@ Produces the following output:
     et    dolore    magna
     aliqua.
 
+/// Available options.
+*for an up-to-date list of default option values, see ftext -h*
 
-Quick start:
-$ make
-$ ./ftext < tests/input.txt
+- -c, --columns ::
+  Number of columns.
+- -l, --lines ::
+  Number of lines.
+- -w, --width ::
+  Number of characters on a row of a column.
+- -g, --gap ::
+  Number of spaces between columns
+- -h, --help ::
+  Show help and exit.
+- -m, --mthread ::
+  Execute the program using multiple threads.
+- -v, --version ::
+  Output version information and exit.
 
 See LICENSE for copyright informations.
-See man ./ftext.1 for a list of available options.
