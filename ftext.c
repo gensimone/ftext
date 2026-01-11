@@ -120,4 +120,6 @@ int main(int argc, char* argv[])
     mthread_exec(stdin, stdout, cols, lines, width, gap);
   else
     sthread_exec(stdin, stdout, cols, lines, width, gap);
+
+  return EXIT_SUCCESS;
 }
