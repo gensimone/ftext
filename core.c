@@ -1,3 +1,4 @@
+#include "core.h"
 #include "alloc.h"
 #include "queue.h"
 #include "strutil.h"
@@ -153,6 +154,7 @@ void format_page(char** page, Queue* stream_q, const unsigned int cols, const un
       /* Load a line of length 'width' to notify new paragraph. */
 
       char* line = die_on_fail_calloc((width * 4) + 1, sizeof(char));
+
       if (new_paragraph) {
         sx_align(line_q, line);
         queue_top(stream_q, strspace(width)); // Placeholder for new paragraph line.
@@ -177,4 +179,28 @@ void print_page(char** page, FILE* stream, const unsigned int lines)
       break;
     fprintf(stream, "%s\n", page[l]);
   }
+}
+
+/* Format the entire input stream and place the result in the output stream using the specified
+ * options. */
+void format(FILE* input_stream, FILE* output_stream, const unsigned cols, const unsigned lines,
+            const unsigned width, const unsigned gap)
+{
+  Queue* stream_q = queue_create();
+  load_words(stream_q, input_stream, width);
+
+  const size_t page_width = (width * cols + (cols - 1) * gap) * 4;
+  char** page;
+
+  do {
+    page = die_on_fail_palloc(lines, page_width);
+    format_page(page, stream_q, cols, lines, width, gap);
+    print_page(page, output_stream, lines);
+    if (queue_size(stream_q) > 0)
+      fprintf(output_stream, "%s", NEW_PAGE);
+    free_page(page, lines);
+  } while (queue_size(stream_q) > 0);
+
+  assert(queue_size(stream_q) == 0);
+  free(stream_q);
 }
