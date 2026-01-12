@@ -34,8 +34,6 @@ Produces the following output:
   Number of spaces between columns
 - -h, --help ::
   Show help and exit.
-- -m, --mthread ::
-  Execute the program using multiple threads.
 - -v, --version ::
   Output version information and exit.
 
