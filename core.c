@@ -174,11 +174,11 @@ void format_page(char** page, Queue* stream_q, const unsigned int cols, const un
 /* Print the formatted page to the specified stream. */
 void print_page(char** page, FILE* stream, const unsigned int lines)
 {
-  for (unsigned int l = 0; l < lines; l++) {
-    if (strlen(page[l]) == 0)
+  for (unsigned int l = 0; l < lines; l++)
+    if (l < lines - 1 && !strlen(page[l]) && !strlen(page[l + 1]))
       break;
-    fprintf(stream, "%s\n", page[l]);
-  }
+    else
+      fprintf(stream, "%s\n", page[l]);
 }
 
 /* Format the entire input stream and place the result in the output stream using the specified
